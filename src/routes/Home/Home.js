@@ -1,143 +1,106 @@
+import axios from 'axios'
 import Button from 'components/Button'
 import Column from 'components/Column'
 import Image from 'components/Image'
+import Loader from 'components/Loader'
 import Modal from 'components/Modal'
 import Row from 'components/Row'
 import Text from 'components/Text'
-import { useUser } from 'context/user-context'
-import React, { Fragment, useState } from 'react'
+import { getToken } from 'helpers'
+import React, { useState } from 'react'
+import { useQuery } from 'react-query'
 import { useHistory } from 'react-router-dom'
 
 import CloseIcon from '../../assets/close.svg'
 import EditIcon from '../../assets/edit.svg'
 import TrashIcon from '../../assets/trash.svg'
 
+const token = getToken()
+
+const fetchNavers = async () => {
+  const response = await axios.get(`${process.env.REACT_APP_API_URL}v1/navers`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+
+  return response.data
+}
+
 const Home = () => {
-  const { logout } = useUser()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { isLoading, isError, data } = useQuery('navers', fetchNavers)
 
   const history = useHistory()
   window.redirect = history.push
 
-  const [isOpen, setIsOpen] = useState(false)
+  if (isLoading) {
+    return <Loader />
+  }
 
-  const navers = [
-    {
-      id: 1,
-      name: 'Gerson Rocha',
-      email: 'johndoe@gmail.com',
-      role: 'Front-end Developer',
-      phone: '+5511999999999',
-      createdAt: '2020-01-01',
-      avatarUrl: 'https://avatars.githubusercontent.com/u/38770302?v=4'
-    },
+  if (isError) {
+    return <div>Error: {data.message}</div>
+  }
 
-    {
-      id: 2,
-      name: 'Gerson Rocha',
-      email: 'johndoe@gmail.com',
-      role: 'Front-end Developer',
-      phone: '+5511999999999',
-      createdAt: '2020-01-01',
-      avatarUrl: 'https://avatars.githubusercontent.com/u/38770302?v=4'
-    },
-
-    {
-      id: 3,
-      name: 'Gerson Rocha',
-      email: 'johndoe@gmail.com',
-      role: 'Front-end Developer',
-      phone: '+5511999999999',
-      createdAt: '2020-01-01',
-      avatarUrl: 'https://avatars.githubusercontent.com/u/38770302?v=4'
-    },
-
-    {
-      id: 4,
-      name: 'Gerson Rocha',
-      email: 'johndoe@gmail.com',
-      role: 'Front-end Developer',
-      phone: '+5511999999999',
-      createdAt: '2020-01-01',
-      avatarUrl: 'https://avatars.githubusercontent.com/u/38770302?v=4'
-    },
-
-    {
-      id: 5,
-      name: 'Gerson Rocha',
-      email: 'johndoe@gmail.com',
-      role: 'Front-end Developer',
-      phone: '+5511999999999',
-      createdAt: '2020-01-01',
-      avatarUrl: 'https://avatars.githubusercontent.com/u/38770302?v=4'
-    },
-
-    {
-      id: 6,
-      name: 'Gerson Rocha',
-      email: 'johndoe@gmail.com',
-      role: 'Front-end Developer',
-      phone: '+5511999999999',
-      createdAt: '2020-01-01',
-      avatarUrl: 'https://avatars.githubusercontent.com/u/38770302?v=4'
-    }
-  ]
-
-  const handleAddUser = () => {
+  const handleAddNaver = () => {
     history.push('/usuarios/criar')
   }
 
-  const handleDeleteUser = event => {
+  const handleDeleteNaver = event => {
     event.stopPropagation()
-    alert('Deletar usuário')
+    alert('Deletar naver')
   }
 
-  const handleEditUser = event => {
+  const handleEditNaver = event => {
     event.stopPropagation()
     alert('Editar usuário')
   }
 
   const openModal = () => {
-    setIsOpen(true)
+    setIsModalOpen(true)
   }
 
   const closeModal = () => {
-    setIsOpen(false)
+    setIsModalOpen(false)
   }
 
   return (
-    <Fragment>
+    <>
       <Row justifyContent='space-between' alignItems='center' marginTop={64}>
         <Text fontSize={40} fontWeight={600}>
           Navers
         </Text>
 
-        <Button width={176} fontSize={14} onClick={handleAddUser}>
+        <Button width={176} fontSize={14} onClick={handleAddNaver}>
           Adicionar Naver
         </Button>
       </Row>
 
-      <Row alignItems='center' marginTop={40} justifyContent='space-between' overflow='auto' onClick={openModal}>
-        {/* Iteração com o array estático de navers */}
-        {navers.map(naver => (
-          <Column key={naver.id} marginRight={30} cursor='pointer'>
-            <Image border='1px solid black' src={naver.avatarUrl} width={280} height={280} marginBottom={16} />
-            <Text variant='regular' fontWeight={600} marginBottom={4}>
-              {naver.name}
-            </Text>
-            <Text variant='regular' fontWeight={400}>
-              {naver.role}
-            </Text>
+      <Row alignItems='center' marginTop={40} overflow='auto' onClick={openModal}>
+        {isLoading ? (
+          <div>
+            <Loader />
+          </div>
+        ) : (
+          data.map((naver, index) => (
+            <Column key={index} marginRight={30} cursor='pointer'>
+              <Image border='1px solid black' src={naver.url} width={280} height={280} marginBottom={16} />
+              <Text variant='regular' fontWeight={600} marginBottom={4}>
+                {naver.name}
+              </Text>
+              <Text variant='regular' fontWeight={400}>
+                {naver.job_role}
+              </Text>
 
-            <Row alignItems='center' marginTop={16} marginBottom={16} cursor={'pointer'}>
-              <Image src={TrashIcon} width={14} height={18} marginRight={16} onClick={handleDeleteUser} />
-              <Image src={EditIcon} width={18} height={18} marginRight={16} onClick={handleEditUser} />
-            </Row>
-          </Column>
-        ))}
+              <Row alignItems='center' marginTop={16} marginBottom={16} cursor={'pointer'}>
+                <Image src={TrashIcon} width={14} height={18} marginRight={16} onClick={handleDeleteNaver} />
+                <Image src={EditIcon} width={18} height={18} marginRight={16} onClick={handleEditNaver} />
+              </Row>
+            </Column>
+          ))
+        )}
       </Row>
 
       {/* Modal Component */}
-      <Modal isOpen={isOpen} width={'80%'} maxWidth={'800px'}>
+      <Modal isOpen={isModalOpen} width={'80%'} maxWidth={'800px'}>
         <Row>
           <Column>
             <Image src='https://avatars.githubusercontent.com/u/38770302?v=4' width={'100%'} />
@@ -164,18 +127,18 @@ const Home = () => {
             </Column>
             <Column marginBottom={30}>
               <Text variant='regular' fontWeight={600} marginBottom={4}>
-                Idade
+                Data de Nascimento
               </Text>
               <Text variant='regular' fontWeight={400}>
-                25 anos
+                28/06/1997
               </Text>
             </Column>
             <Column marginBottom={30}>
               <Text variant='regular' fontWeight={600} marginBottom={4}>
-                Tempo de Empresa
+                Data de admissão
               </Text>
               <Text variant='regular' fontWeight={400}>
-                1 semana
+                18/07/2022
               </Text>
             </Column>
             <Column marginBottom={30}>
@@ -189,7 +152,7 @@ const Home = () => {
           </Column>
         </Row>
       </Modal>
-    </Fragment>
+    </>
   )
 }
 
