@@ -24,8 +24,20 @@ export const loginResolver = yupShapeWithResolver({
 export const userFormResolver = yupShapeWithResolver({
   name: yup.string().min(2, 'Mínimo de 2 caracteres no campo').required(),
   job_role: yup.string().required(),
-  age: yup.string().required(),
-  timeAsEmployee: yup.string().required(),
+  birthdate: yup
+    .string()
+    .matches(
+      /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/,
+      'Insira uma data válida no formato XX/XX/XXXX'
+    )
+    .required(),
+  admission_date: yup
+    .string()
+    .matches(
+      /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/,
+      'Insira uma data válida no formato XX/XX/XXXX'
+    )
+    .required(),
   project: yup.string().required(),
   url: yup.string().url('O campo precisa ser uma URL válida').required()
 })
