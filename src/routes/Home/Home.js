@@ -9,7 +9,8 @@ import Text from 'components/Text'
 import { getToken } from 'helpers'
 import React, { useState } from 'react'
 import { useQuery } from 'react-query'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
+import { deleteUser, getUserById } from 'services/users'
 
 import CloseIcon from '../../assets/close.svg'
 import EditIcon from '../../assets/edit.svg'
@@ -29,6 +30,12 @@ const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { isLoading, isError, data } = useQuery('navers', fetchNavers)
 
+  const { id } = useParams()
+
+  const { isFetching: isLoadingUser, data: user } = useQuery(['userById', id], getUserById, {
+    enabled: !!id
+  })
+
   const history = useHistory()
   window.redirect = history.push
 
@@ -44,14 +51,15 @@ const Home = () => {
     history.push('/usuarios/criar')
   }
 
-  const handleDeleteNaver = event => {
-    event.stopPropagation()
-    alert('Deletar naver')
-  }
-
   const handleEditNaver = event => {
     event.stopPropagation()
-    alert('Editar usuário')
+    history.push(`/usuarios/editar/${user.id}`)
+  }
+
+  const handleDeleteNaver = async event => {
+    event.stopPropagation()
+    await deleteUser(user.id)
+    history.goBack()
   }
 
   const openModal = () => {
@@ -91,7 +99,21 @@ const Home = () => {
               </Text>
 
               <Row alignItems='center' marginTop={16} marginBottom={16} cursor={'pointer'}>
-                <Image src={TrashIcon} width={14} height={18} marginRight={16} onClick={handleDeleteNaver} />
+                <Image
+                  src={TrashIcon}
+                  width={14}
+                  height={18}
+                  marginRight={16}
+                  onClick={() =>
+                    openModal({
+                      type: 'confirmation',
+                      title: 'Atenção',
+                      content: 'Tem certeza de que deseja excluir o naver?',
+                      onConfirm: handleDeleteNaver
+                    })
+                  }
+                />
+
                 <Image src={EditIcon} width={18} height={18} marginRight={16} onClick={handleEditNaver} />
               </Row>
             </Column>
