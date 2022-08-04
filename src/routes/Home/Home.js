@@ -1,4 +1,3 @@
-import axios from 'axios'
 import Button from 'components/Button'
 import Column from 'components/Column'
 import Image from 'components/Image'
@@ -7,34 +6,18 @@ import Modal from 'components/Modal'
 import Row from 'components/Row'
 import Text from 'components/Text'
 import { getToken } from 'helpers'
+import { fetchNavers } from 'helpers/fetch'
 import React, { useState } from 'react'
 import { useQuery } from 'react-query'
-import { useHistory, useParams } from 'react-router-dom'
-import { deleteUser, getUserById } from 'services/users'
+import { useHistory } from 'react-router-dom'
 
 import CloseIcon from '../../assets/close.svg'
 import EditIcon from '../../assets/edit.svg'
 import TrashIcon from '../../assets/trash.svg'
 
-const token = getToken()
-
-const fetchNavers = async () => {
-  const response = await axios.get(`${process.env.REACT_APP_API_URL}v1/navers`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-
-  return response.data
-}
-
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { isLoading, isError, data } = useQuery('navers', fetchNavers)
-
-  const { id } = useParams()
-
-  const { isFetching: isLoadingUser, data: user } = useQuery(['userById', id], getUserById, {
-    enabled: !!id
-  })
 
   const history = useHistory()
   window.redirect = history.push
@@ -54,12 +37,6 @@ const Home = () => {
   const handleEditNaver = event => {
     event.stopPropagation()
     history.push(`/usuarios/editar/${user.id}`)
-  }
-
-  const handleDeleteNaver = async event => {
-    event.stopPropagation()
-    await deleteUser(user.id)
-    history.goBack()
   }
 
   const openModal = () => {
@@ -88,8 +65,8 @@ const Home = () => {
             <Loader />
           </div>
         ) : (
-          data.map((naver, index) => (
-            <Column key={index} marginRight={30} cursor='pointer'>
+          data.map(naver => (
+            <Column key={naver.id} marginRight={30} cursor='pointer'>
               <Image border='1px solid black' src={naver.url} width={280} height={280} marginBottom={16} />
               <Text variant='regular' fontWeight={600} marginBottom={4}>
                 {naver.name}
@@ -104,14 +81,28 @@ const Home = () => {
                   width={14}
                   height={18}
                   marginRight={16}
-                  onClick={() =>
-                    openModal({
-                      type: 'confirmation',
-                      title: 'Atenção',
-                      content: 'Tem certeza de que deseja excluir o naver?',
-                      onConfirm: handleDeleteNaver
+                  onClick={event => {
+                    event.stopPropagation()
+                    const token = getToken()
+                    fetch(`${process.env.REACT_APP_API_URL}v1/navers/${naver.id}`, {
+                      method: 'DELETE',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                      }
                     })
-                  }
+                      .then(response => response.json())
+                      .then(data => {
+                        location.reload()
+                        if (data.error) {
+                          throw new Error(data.message)
+                        }
+                        return data
+                      })
+                      .catch(error => {
+                        console.log(error)
+                      })
+                  }}
                 />
 
                 <Image src={EditIcon} width={18} height={18} marginRight={16} onClick={handleEditNaver} />

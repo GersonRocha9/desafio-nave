@@ -42,7 +42,7 @@ export const updateUser = (id, { birthdate, admission_date, ...data }) =>
     admission_date: formatDateFromApi(admission_date)
   })
 
-export const deleteUser = async id => await client.delete(`/v1/users/${id}`)
+export const deleteUser = async id => await client.delete(`/v1/navers/${id}`)
 
 export const getUser = () => client.get('v1/me')
 
